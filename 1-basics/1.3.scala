@@ -1,7 +1,6 @@
 import java.util.Base64
 
-object Main extends App {
-
+object Gibberishness {
   //From https://www.math.cornell.edu/~mec/2003-2004/cryptography/subs/frequencies.html
   //I snuck the space character in after N with a made up frequency so it's close to
   //"ETAOIN SHRDLU"
@@ -19,9 +18,11 @@ object Main extends App {
     'D' -> 4.32
   )
 
-  def weightOfNonGibberishness(input: String): Double = {
-    input.map((c) => Character.toUpperCase(c)).map((c) => letterFrequencies.getOrElse(c, 0.0)).sum
-  }
+    def weight(input: String): Double = {
+      input.map((c) => Character.toUpperCase(c)).map((c) => letterFrequencies.getOrElse(c, 0.0)).sum
+    }
+}
+object Decoder {
 
   def hexToBytes(hex: String): Array[Byte] = {
     val result = hex.grouped(2).foldLeft(List[Byte]()) { (acc, byteInHex) =>
@@ -30,14 +31,19 @@ object Main extends App {
     result.reverse.toArray
   }
 
-  val message = "1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"
-  val messageRaw = hexToBytes(message)
-  val candidates = (0 to 255) map { c =>
-    val key = Array.fill(message.length / 2)(c.toByte)
-    val result = (messageRaw, key).zipped.foldLeft("") { case (acc, (messageRawByte, keyByte)) =>
-      acc ++ (messageRawByte ^ keyByte).toChar.toString
+  def crack(encodedMessage: String): String = {
+    val messageRaw = hexToBytes(encodedMessage)
+    val candidates = (0 to 255) map { c =>
+      val key = Array.fill(encodedMessage.length / 2)(c.toByte)
+      val result = (messageRaw, key).zipped.foldLeft("") { case (acc, (messageRawByte, keyByte)) =>
+        acc ++ (messageRawByte ^ keyByte).toChar.toString
+      }
+      result
     }
-    result
+    candidates.maxBy((x) => Gibberishness.weight(x))
   }
-  println(candidates.maxBy((x) => weightOfNonGibberishness(x)))
+}
+
+object Main extends App {
+  println(Decoder.crack("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"))
 }
