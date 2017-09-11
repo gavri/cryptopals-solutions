@@ -1,3 +1,5 @@
+import org.scalatest._
+
 import java.util.Base64
 
 object Gibberishness {
@@ -22,8 +24,8 @@ object Gibberishness {
       input.map((c) => Character.toUpperCase(c)).map((c) => letterFrequencies.getOrElse(c, 0.0)).sum
     }
 }
-object Decoder {
 
+object Decoder {
   def hexToBytes(hex: String): Array[Byte] = {
     val result = hex.grouped(2).foldLeft(List[Byte]()) { (acc, byteInHex) =>
       Integer.parseInt(byteInHex, 16).toByte :: acc
@@ -44,6 +46,8 @@ object Decoder {
   }
 }
 
-object Main extends App {
-  println(Decoder.crack("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736"))
-}
+new FlatSpec with Matchers {
+  it should "crack" in {
+    Decoder.crack("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736") should equal ("Cooking MC's like a pound of bacon")
+  }
+}.execute
